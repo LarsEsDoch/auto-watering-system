@@ -8,11 +8,15 @@ static constexpr int moistureSensorMax = 200;
 
 static constexpr float potHeight = 8.0;
 static constexpr float potDiameter = 10.0;
+//Small pots under 15cm need only 1 outlet
+//Middle pots between 16cm and 25cm need 1 or 2 outlets
+//Large pots between 26cm and 50cm need 2 outlets
+//Extra large pots over 40cm need 3 or 4 outlets or a drip ring
 
 static float radius = potDiameter / 2;
 static float potVolumeMl = 3.14159 * radius * radius * potHeight * 0.85;
 
-static float wateringVolume = 0.025;
+static float wateringVolume = constrain(0.02 + (25.0 / sqrt(potVolumeMl)), 0.025, 0.08);
 
 static float mlPerMs = 1600.0 / 60000.0;
 static float minWateringTime = 200.0;
@@ -25,7 +29,7 @@ static double waterThreshold = 0.3;
 static bool isWatering = false;
 
 static unsigned long checkInterval = 60 * 1000.0;
-static unsigned long wateringInterval = (15 + potHeight * 1.5) * 60.0 * 1000.0;
+static unsigned long wateringInterval = (5.0 + (sqrt(potVolumeMl) * 0.6)) * 60.0 * 1000.0;
 
 static bool isFaulted = false;
 static int wateringFailureCount = 0;
