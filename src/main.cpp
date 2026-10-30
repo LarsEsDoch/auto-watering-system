@@ -58,7 +58,7 @@ static void checkSoilMoisture() {
     static unsigned long last_watering = millis() - wateringInterval;
     static unsigned long last_verification = millis() - wateringInterval;
     const bool soakTimeElapsed = millis() - last_watering >= wateringInterval;
-    const bool verificationTimeElapsed = millis() - last_verification >= wateringInterval / 3;
+    const bool verificationTimeElapsed = millis() - last_verification >= wateringInterval / 4;
 
     if (pendingVerification && verificationTimeElapsed) {
         if (soilMoisture - soilMoistureBeforeWatering < 0.01) {
