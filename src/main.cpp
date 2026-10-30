@@ -22,9 +22,10 @@ static bool isWatering = false;
 static unsigned long checkInterval = 60 * 1000.0;
 static unsigned long wateringInterval = (15 + (potHeight * 1.5)) * 60.0 * 1000.0;
 
-static bool hasError = false;
-static int errorCount = 0;
+static bool isFaulted = false;
+static int wateringFailureCount = 0;
 static float soilMoistureBeforeWatering = 0.0;
+static bool pendingVerification = false;
 
 void setup() {
     Serial.begin(9600);
@@ -39,10 +40,23 @@ static void checkSoilMoisture() {
     const float soilMoisture = constrain(map(rawSoilMoisture, 600, 200, 0, 100), 0, 100) / 100.0;
     const bool needsWater = soilMoisture < waterThreshold;
 
+    if (pendingVerification) {
+        if (soilMoisture - soilMoistureBeforeWatering < 0.02) {
+            wateringFailureCount++;
+            Serial.println("Encountered no change in moisture after watering!");
+        } else {
+            wateringFailureCount = 0;
+            Serial.println("Moisture increased successfully.");
+        }
+        pendingVerification = false;
+    }
+
     static unsigned long last_watering = millis() - wateringInterval;
     if (millis() - last_watering >= wateringInterval) {
         if (needsWater && (needsWater != isWatering)) {
             soilMoistureBeforeWatering = soilMoisture;
+            pendingVerification = true;
+
             Serial.println("Watering started!");
             digitalWrite(motorGatePin, HIGH);
             isWatering = true;
@@ -51,10 +65,6 @@ static void checkSoilMoisture() {
         }
     }
 
-    if (millis() - last_watering >= 120000 && 0.01 > soilMoisture - soilMoistureBeforeWatering) {
-        errorCount++;
-        Serial.println("Encountered no change in moisture after watering!");
-    }
     Serial.print("Soil Moisture: ");
     Serial.println(soilMoisture);
     Serial.print("Needs Watering: ");
@@ -62,18 +72,23 @@ static void checkSoilMoisture() {
 }
 
 static void wateringLoop() {
-    if (errorCount >= 3) {
-        if (!hasError) {
-            Serial.println("There are errors in watering system!");
+    if (wateringFailureCount >= 3) {
+        if (!isFaulted) {
+            Serial.println("There are problems in watering system!");
             Serial.println("Please check tubes, water reservoir and moisture sensor!");
         }
         digitalWrite(motorGatePin, LOW);
-        hasError = true;
-        errorCount = 0;
+        isFaulted = true;
+    } else {
+        if (isFaulted) {
+            Serial.println("Problems got solved!");
+            Serial.println("Continue watering plants!");
+        }
+        isFaulted = false;
     }
 
     static unsigned long last_check = millis() - checkInterval;
-    if (!hasError && millis() - last_check >= checkInterval) {
+    if (!isFaulted && millis() - last_check >= checkInterval) {
         checkSoilMoisture();
         last_check = millis();
     }
