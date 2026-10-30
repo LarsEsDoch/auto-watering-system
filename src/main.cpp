@@ -34,6 +34,20 @@ void setup() {
 void checkSoilMoisture() {
     const int rawSoilMoisture = analogRead(moistureSensor1);
     const double soilMoisture = constrain(map(rawSoilMoisture, 600, 200, 0, 100), 0, 100) / 100.0;
+    const bool needsWater = soilMoisture < waterTreshold;
+
+    static unsigned long last_watering = millis() - wateringInterval;
+    if (millis() - last_watering >= wateringInterval) {
+        if (needsWater && (needsWater != isWatering)) {
+            Serial.println("Watering started!");
+            digitalWrite(motorGatePin, HIGH);
+        }
+    }
+void wateringLoop() {
+    static unsigned long last_check = millis() - checkInterval;
+    if (millis() - last_check >= checkInterval) {
+        checkSoilMoisture();
+    }
     }
 }
 
