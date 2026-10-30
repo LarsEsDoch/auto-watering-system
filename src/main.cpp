@@ -8,18 +8,18 @@ static constexpr int moistureSensorMax = 210;
 
 static constexpr float potHeight = 8.0;
 static constexpr float potDiameter = 10.0;
-//Small pots under 15cm need only 1 outlet
-//Middle pots between 16cm and 25cm need 1 or 2 outlets
-//Large pots between 26cm and 50cm need 2 outlets
-//Extra large pots over 40cm need 3 or 4 outlets or a drip ring
+// Small pots (under 15cm diameter): 1 outlet (placed 3-4cm from sensor)
+// Medium pots (15cm to 24cm diameter): 2 outlets (opposite sides)
+// Large pots (25cm to 35cm diameter): 3 to 4 outlets (distributed in a ring)
+// Extra large pots (over 35cm diameter): Drip ring or 4+ outlets required
 
-static float radius = potDiameter / 2;
+static float radius = potDiameter / 2.0;
 static float potVolumeMl = 3.14159 * radius * radius * potHeight * 0.85;
 
-static float wateringVolume = constrain(0.02 + (25.0 / sqrt(potVolumeMl)), 0.025, 0.08);
+static float wateringVolume = constrain(0.022 + (1.25 / sqrt(potVolumeMl)), 0.035, 0.08);
 
 static float mlPerMs = 1600.0 / 60000.0;
-static float minWateringTime = 200.0;
+static constexpr unsigned long minWateringTime = 800.0;
 
 static unsigned long currentWateringDuration = 0;
 static unsigned long wateringDuration = max(((potVolumeMl * wateringVolume) / mlPerMs), minWateringTime);
@@ -29,7 +29,7 @@ static double waterThreshold = 0.3;
 static bool isWatering = false;
 
 static unsigned long checkInterval = 60 * 1000.0;
-static unsigned long wateringInterval = (5.0 + (sqrt(potVolumeMl) * 0.6)) * 60.0 * 1000.0;
+static unsigned long wateringInterval = (4.0 + (potHeight * 1.0) + (potDiameter * 0.35)) * 60.0 * 1000.0;
 
 static bool isFaulted = false;
 static int wateringFailureCount = 0;
@@ -80,8 +80,8 @@ static void checkSoilMoisture() {
         pendingVerification = true;
 
         float deficitFactor = (waterThreshold - soilMoisture) / waterThreshold;
-        deficitFactor = constrain(deficitFactor, 0.2, 1.0);
-        currentWateringDuration = max((wateringDuration * deficitFactor), minWateringTime);
+        deficitFactor = constrain(deficitFactor, 0.35, 1.0);
+        currentWateringDuration = max((unsigned long)(wateringDuration * deficitFactor), minWateringTime);
 
         Serial.print("Watering started for ");
         Serial.print(currentWateringDuration);
