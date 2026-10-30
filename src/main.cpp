@@ -40,34 +40,42 @@ static void checkSoilMoisture() {
     const float soilMoisture = constrain(map(rawSoilMoisture, 600, 200, 0, 100), 0, 100) / 100.0;
     const bool needsWater = soilMoisture < waterThreshold;
 
-    if (pendingVerification) {
     if (!needsWater && (wateringFailureCount > 0 || isFaulted)) {
         Serial.println("Manual watering noticed. Starting automatic watering again!");
         wateringFailureCount = 0;
         pendingVerification = false;
     }
-        if (soilMoisture - soilMoistureBeforeWatering < 0.02) {
-            wateringFailureCount++;
-            Serial.println("Encountered no change in moisture after watering!");
-        } else {
-            wateringFailureCount = 0;
-            Serial.println("Moisture increased successfully.");
-        }
-        pendingVerification = false;
-    }
 
     static unsigned long last_watering = millis() - wateringInterval;
-    if (millis() - last_watering >= wateringInterval) {
-        if (needsWater && (needsWater != isWatering)) {
-            soilMoistureBeforeWatering = soilMoisture;
-            pendingVerification = true;
+    static unsigned long last_verification = millis() - wateringInterval;
+    const bool soakTimeElapsed = (millis() - last_watering >= wateringInterval);
+    const bool verificationTimeElapsed = (millis() - last_verification >= wateringInterval / 3);
 
-            Serial.println("Watering started!");
-            digitalWrite(motorGatePin, HIGH);
-            isWatering = true;
-            wateringTime = millis();
-            last_watering = millis();
+    if (pendingVerification && verificationTimeElapsed) {
+        if (soilMoisture - soilMoistureBeforeWatering < 0.02) {
+            wateringFailureCount++;
+            Serial.print("No moisture increase detected. Fail count: ");
+            Serial.println(wateringFailureCount);
+        } else {
+            if (wateringFailureCount > 0) {
+                Serial.println("Moisture increase confirmed. Continue with normal operation!");
+            }
+            wateringFailureCount = 0;
+            pendingVerification = false;
         }
+        last_verification = millis();
+    }
+
+    if (!isFaulted && soakTimeElapsed && needsWater && !isWatering) {
+        soilMoistureBeforeWatering = soilMoisture;
+        pendingVerification = true;
+
+        Serial.println("Watering started!");
+        digitalWrite(motorGatePin, HIGH);
+        isWatering = true;
+        wateringTime = millis();
+        last_watering = millis();
+        last_verification = millis();
     }
 
     Serial.print("Soil Moisture: ");
