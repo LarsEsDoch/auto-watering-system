@@ -1,12 +1,22 @@
 #include <Arduino.h>
 
-const int motorGatePin = 3;
+constexpr int motorGatePin = 3;
+constexpr int moistureSensor1 = A0;
+
+
 
 void setup() {
     Serial.begin(9600);
     Serial.println("Booted");
 
     pinMode(motorGatePin, OUTPUT);
+
+}
+
+void checkSoilMoisture() {
+    const int rawSoilMoisture = analogRead(moistureSensor1);
+    const double soilMoisture = constrain(map(rawSoilMoisture, 600, 200, 0, 100), 0, 100) / 100.0;
+    }
 }
 
 void loop() {
