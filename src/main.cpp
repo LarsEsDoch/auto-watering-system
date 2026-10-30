@@ -4,6 +4,24 @@ constexpr int motorGatePin = 3;
 constexpr int moistureSensor1 = A0;
 
 
+const float potHeight = 8.0;
+const float potDiameter = 10.0;
+
+float radius = potDiameter / 2;
+float potVolumeMl = 3.14159 * radius * radius * potHeight * 0.85;
+
+float wateringVolume = 0.025;
+
+float mlPerMs = 1600.0 / 60000.0;
+long wateringDuration = (potVolumeMl * wateringVolume) / mlPerMs;
+unsigned long wateringTime = 0;
+
+double waterTreshold = 0.3;
+boolean isWatering = false;
+
+long checkInterval = 600 * 1000.0;
+long wateringInterval = (15 + (potHeight * 1.5)) * 60.0 * 1000.0;
+
 
 void setup() {
     Serial.begin(9600);
