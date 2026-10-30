@@ -22,6 +22,9 @@ static bool isWatering = false;
 static unsigned long checkInterval = 60 * 1000.0;
 static unsigned long wateringInterval = (15 + (potHeight * 1.5)) * 60.0 * 1000.0;
 
+static bool hasError = false;
+static int errorCount = 0;
+static float soilMoistureBeforeWatering = 0.0;
 
 void setup() {
     Serial.begin(9600);
@@ -39,12 +42,18 @@ static void checkSoilMoisture() {
     static unsigned long last_watering = millis() - wateringInterval;
     if (millis() - last_watering >= wateringInterval) {
         if (needsWater && (needsWater != isWatering)) {
+            soilMoistureBeforeWatering = soilMoisture;
             Serial.println("Watering started!");
             digitalWrite(motorGatePin, HIGH);
             isWatering = true;
             wateringTime = millis();
             last_watering = millis();
         }
+    }
+
+    if (millis() - last_watering >= 120000 && 0.01 > soilMoisture - soilMoistureBeforeWatering) {
+        errorCount++;
+        Serial.println("Encountered no change in moisture after watering!");
     }
     Serial.print("Soil Moisture: ");
     Serial.println(soilMoisture);
@@ -53,8 +62,18 @@ static void checkSoilMoisture() {
 }
 
 static void wateringLoop() {
+    if (errorCount >= 3) {
+        if (!hasError) {
+            Serial.println("There are errors in watering system!");
+            Serial.println("Please check tubes, water reservoir and moisture sensor!");
+        }
+        digitalWrite(motorGatePin, LOW);
+        hasError = true;
+        errorCount = 0;
+    }
+
     static unsigned long last_check = millis() - checkInterval;
-    if (millis() - last_check >= checkInterval) {
+    if (!hasError && millis() - last_check >= checkInterval) {
         checkSoilMoisture();
         last_check = millis();
     }
