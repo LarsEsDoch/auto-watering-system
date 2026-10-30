@@ -88,7 +88,7 @@ static void wateringLoop() {
     }
 
     static unsigned long last_check = millis() - checkInterval;
-    if (!isFaulted && millis() - last_check >= checkInterval) {
+    if (millis() - last_check >= checkInterval) {
         checkSoilMoisture();
         last_check = millis();
     }
