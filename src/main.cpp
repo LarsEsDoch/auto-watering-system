@@ -41,6 +41,11 @@ static void checkSoilMoisture() {
     const bool needsWater = soilMoisture < waterThreshold;
 
     if (pendingVerification) {
+    if (!needsWater && (wateringFailureCount > 0 || isFaulted)) {
+        Serial.println("Manual watering noticed. Starting automatic watering again!");
+        wateringFailureCount = 0;
+        pendingVerification = false;
+    }
         if (soilMoisture - soilMoistureBeforeWatering < 0.02) {
             wateringFailureCount++;
             Serial.println("Encountered no change in moisture after watering!");
