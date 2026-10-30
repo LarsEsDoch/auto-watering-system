@@ -3,8 +3,8 @@
 constexpr int motorGatePin = 3;
 constexpr int moistureSensor1 = A0;
 
-static constexpr int moistureSensorMin = 600;
-static constexpr int moistureSensorMax = 200;
+static constexpr int moistureSensorMin = 460;
+static constexpr int moistureSensorMax = 210;
 
 static constexpr float potHeight = 8.0;
 static constexpr float potDiameter = 10.0;
@@ -61,7 +61,7 @@ static void checkSoilMoisture() {
     const bool verificationTimeElapsed = millis() - last_verification >= wateringInterval / 3;
 
     if (pendingVerification && verificationTimeElapsed) {
-        if (soilMoisture - soilMoistureBeforeWatering < 0.02) {
+        if (soilMoisture - soilMoistureBeforeWatering < 0.01) {
             wateringFailureCount++;
             Serial.print("No moisture increase detected. Fail count: ");
             Serial.println(wateringFailureCount);
