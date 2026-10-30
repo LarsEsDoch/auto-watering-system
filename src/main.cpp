@@ -4,23 +4,23 @@ constexpr int motorGatePin = 3;
 constexpr int moistureSensor1 = A0;
 
 
-const float potHeight = 8.0;
-const float potDiameter = 10.0;
+static constexpr float potHeight = 8.0;
+static constexpr float potDiameter = 10.0;
 
-float radius = potDiameter / 2;
-float potVolumeMl = 3.14159 * radius * radius * potHeight * 0.85;
+static float radius = potDiameter / 2;
+static float potVolumeMl = 3.14159 * radius * radius * potHeight * 0.85;
 
-float wateringVolume = 0.025;
+static float wateringVolume = 0.025;
 
-float mlPerMs = 1600.0 / 60000.0;
-long wateringDuration = (potVolumeMl * wateringVolume) / mlPerMs;
-unsigned long wateringTime = 0;
+static float mlPerMs = 1600.0 / 60000.0;
+static unsigned long wateringDuration = max(((potVolumeMl * wateringVolume) / mlPerMs), 1000.0);
+static unsigned long wateringTime = 0;
 
-double waterTreshold = 0.3;
-boolean isWatering = false;
+static double waterThreshold = 0.3;
+static bool isWatering = false;
 
-long checkInterval = 600 * 1000.0;
-long wateringInterval = (15 + (potHeight * 1.5)) * 60.0 * 1000.0;
+static unsigned long checkInterval = 60 * 1000.0;
+static unsigned long wateringInterval = (15 + (potHeight * 1.5)) * 60.0 * 1000.0;
 
 
 void setup() {
@@ -31,10 +31,10 @@ void setup() {
 
 }
 
-void checkSoilMoisture() {
+static void checkSoilMoisture() {
     const int rawSoilMoisture = analogRead(moistureSensor1);
-    const double soilMoisture = constrain(map(rawSoilMoisture, 600, 200, 0, 100), 0, 100) / 100.0;
-    const bool needsWater = soilMoisture < waterTreshold;
+    const float soilMoisture = constrain(map(rawSoilMoisture, 600, 200, 0, 100), 0, 100) / 100.0;
+    const bool needsWater = soilMoisture < waterThreshold;
 
     static unsigned long last_watering = millis() - wateringInterval;
     if (millis() - last_watering >= wateringInterval) {
@@ -52,7 +52,7 @@ void checkSoilMoisture() {
     Serial.println(needsWater);
 }
 
-void wateringLoop() {
+static void wateringLoop() {
     static unsigned long last_check = millis() - checkInterval;
     if (millis() - last_check >= checkInterval) {
         checkSoilMoisture();
