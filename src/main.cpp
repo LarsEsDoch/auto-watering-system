@@ -1,5 +1,7 @@
 #include <Arduino.h>
 
+static constexpr float debugMultiplier = 0.1;
+
 constexpr int motorGatePin = 3;
 constexpr int moistureSensor1 = A0;
 
@@ -28,8 +30,8 @@ static unsigned long wateringTime = 0;
 static double waterThreshold = 0.3;
 static bool isWatering = false;
 
-static unsigned long checkInterval = 60 * 1000.0;
-static unsigned long wateringInterval = (4.0 + (potHeight * 1.0) + (potDiameter * 0.35)) * 60.0 * 1000.0;
+static unsigned long checkInterval = 60 * 1000.0 * debugMultiplier;
+static unsigned long wateringInterval = (4.0 + (potHeight * 1.0) + (potDiameter * 0.35)) * 60.0 * 1000.0 * debugMultiplier;
 
 static bool isFaulted = false;
 static int wateringFailureCount = 0;
