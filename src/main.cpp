@@ -41,13 +41,28 @@ void checkSoilMoisture() {
         if (needsWater && (needsWater != isWatering)) {
             Serial.println("Watering started!");
             digitalWrite(motorGatePin, HIGH);
+            isWatering = true;
+            wateringTime = millis();
+            last_watering = millis();
         }
     }
+    Serial.print("Soil Moisture: ");
+    Serial.println(soilMoisture);
+    Serial.print("Needs Watering: ");
+    Serial.println(needsWater);
+}
+
 void wateringLoop() {
     static unsigned long last_check = millis() - checkInterval;
     if (millis() - last_check >= checkInterval) {
         checkSoilMoisture();
+        last_check = millis();
     }
+
+    if (isWatering && millis() - wateringTime >= wateringDuration) {
+        Serial.println("Watering finished!");
+        digitalWrite(motorGatePin, LOW);
+        isWatering = false;
     }
 }
 
